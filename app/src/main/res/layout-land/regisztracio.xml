@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/darker_gray"
+    tools:context=".RegisterActivity">
+
+    
+    <TextView
+        android:id="@+id/registTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/registration"
+        android:textSize="16sp"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:textAlignment="center"
+        />
+    
+    <EditText
+        android:id="@+id/ETUsername"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="10dp"
+        android:ems="10"
+        android:hint="@string/username"
+        android:inputType="textPersonName"
+        android:layout_below="@+id/registTextView"
+        android:minHeight="48dp"
+        android:minWidth="48dp"
+        />
+
+    <EditText
+        android:id="@+id/ETPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ETUsername"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:ems="10"
+        android:layout_marginTop="10dp"
+        android:hint="@string/password"
+        android:inputType="textPassword"
+        android:minHeight="48dp"
+        android:minWidth="48dp"/>
+
+    <EditText
+        android:id="@+id/ETConfirmPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ETPassword"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:ems="10"
+        android:layout_marginTop="10dp"
+        android:hint="@string/confpassword"
+        android:inputType="textPassword"
+        android:minHeight="48dp"
+        android:minWidth="48dp"
+       />
+
+    <EditText
+        android:id="@+id/editTextEmailAddress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ETConfirmPassword"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:ems="10"
+        android:layout_marginTop="10dp"
+        android:inputType="textEmailAddress"
+        android:hint="@string/email"
+        android:minHeight="48dp"
+        android:minWidth="48dp"
+        />
+
+    <EditText
+        android:id="@+id/editTextPhone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/editTextEmailAddress"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:ems="10"
+        android:layout_marginTop="10dp"
+        android:hint="@string/phone"
+        android:inputType="phone"
+        android:minHeight="48dp"
+        android:minWidth="48dp"
+        />
+    <LinearLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:layout_below="@+id/editTextPhone"
+    android:layout_marginTop="20dp"
+    android:layout_centerHorizontal="true">
+
+    <Button
+        android:id="@+id/regist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:onClick="register"
+        android:text="@string/regiszt"
+        app:layout_constraintEnd_toStartOf="@+id/megse"/>
+
+    <Button
+        android:id="@+id/megse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:onClick="megse"
+        android:text="@string/megse"
+        />
+
+    </LinearLayout>
+
+
+</RelativeLayout>

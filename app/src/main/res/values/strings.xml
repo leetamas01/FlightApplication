@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">FlightApplication</string>
+    <string name="username">Felhasználónév</string>
+    <string name="login">Bejelentkezés</string>
+    <string name="regist">Regisztráció</string>
+    <string name="password">jelszó</string>
+    <string name="confpassword">confirm password</string>
+    <string name="megse">Mégse</string>
+    <string name="regiszt">Regisztrálás</string>
+    <string name="phone">telefonszám</string>
+    <string name="email">email-cím</string>
+    <string name="registration">Regisztráció</string>
+    <string name="hello">Hello</string>
+    <string name="anonim">Bejelentkezés vendégként</string>
+</resources>
