@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-        <!-- Repülőjegy foglaló űrlap -->
+
         <TextView
             android:text="Repülőjegy Foglalás"
             android:textSize="24sp"
@@ -63,6 +63,13 @@
             android:layout_marginTop="24dp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/button_view_bookings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Foglalásaim megtekintése" />
 
         <!-- Járatok listája -->
         <TextView

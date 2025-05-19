@@ -1,12 +1,21 @@
 package com.example.flightapplication;
 
 import com.example.flightapplication.FlightAdapter;
+
+import android.app.AlarmManager;
 import android.app.DatePickerDialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -19,6 +28,9 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.net.ParseException;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -35,11 +47,13 @@ import android.content.pm.PackageManager;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 
 import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -70,12 +84,37 @@ public class FlightActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         Log.d(LOG_TAG, "Authenticated user!");
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "channel_id",
+                    "Foglalási értesítések",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+
+        buttonSearch = findViewById(R.id.button_search);
+
+        Button buttonViewBookings = findViewById(R.id.button_view_bookings);
+        buttonViewBookings.setOnClickListener(v -> {
+            Intent intent = new Intent(FlightActivity.this, BookingListActivity.class);
+            startActivity(intent);
+        });
+
+        Animation animation = AnimationUtils.loadAnimation(this, R.anim.fade_scale);
+        buttonViewBookings.startAnimation(animation);
+
+
         setupViews();
         setupSpinners();
         setupDatePickers();
         setupNumberPicker();
         setupRecyclerView();
         setupSearchButton();
+        requestPermissionsIfNecessary();
+        getUserLocationAndSetSpinner();
+        showSearchNotification();
     }
 
     private void setupRecyclerView() {
@@ -163,6 +202,31 @@ public class FlightActivity extends AppCompatActivity {
         editReturnDate.setOnClickListener(dateClickListener);
     }
 
+    private void scheduleFlightReminder(String departureDateString) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        try {
+            Date departureDate = sdf.parse(departureDateString);
+            if (departureDate == null) return;
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(departureDate);
+            calendar.add(Calendar.DAY_OF_MONTH, -1); // előző nap
+            calendar.set(Calendar.HOUR_OF_DAY, 9);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+
+            Intent intent = new Intent(this, ReminderReceiver.class);
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+            AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
+            alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (java.text.ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void setupNumberPicker() {
         numberPicker.setMinValue(1);
         numberPicker.setMaxValue(10);
@@ -181,8 +245,7 @@ public class FlightActivity extends AppCompatActivity {
 
     private void loadFlights() {
         FirebaseFirestore.getInstance().collection("flights")
-                .orderBy("date")
-                .orderBy("time")
+                .orderBy("departureDate")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     List<Flight> flights = new ArrayList<>();
@@ -202,6 +265,54 @@ public class FlightActivity extends AppCompatActivity {
                 break;
             }
         }
+    }
+    private void requestPermissionsIfNecessary() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2);
+        }
+    }
+
+    private void getUserLocationAndSetSpinner() {
+        FusedLocationProviderClient locationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        locationClient.getLastLocation().addOnSuccessListener(location -> {
+            if (location != null) {
+                Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                try {
+                    List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                    if (!addresses.isEmpty()) {
+                        String city = addresses.get(0).getLocality();
+                        setSpinnerSelectionByCity(city);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+    private void showSearchNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "channel_id")
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
+                .setContentTitle("Járatkeresés elindítva")
+                .setContentText("Megkezdtük a járatok keresését a megadott paraméterekkel.")
+                .setPriority(NotificationCompat.PRIORITY_HIGH);
+
+        NotificationManagerCompat manager = NotificationManagerCompat.from(this);
+        manager.notify(100, builder.build());
     }
 
 }
